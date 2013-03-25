@@ -1,0 +1,8 @@
+*~
+*.swp
+
+bin/
+gen/
+
+AndroidManifest.out.xml
+local.properties

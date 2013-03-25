@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">com.bandwidth.tv</string>
+    <string name="title_page_detail">Page Detail</string>
+    <string name="title_activity_fullscreen">Bandwidth Charts</string>
+    <string name="lbl_stop">Stop</string>
+    <string name="lbl_start">Start</string>
+</resources>
