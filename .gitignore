@@ -6,3 +6,5 @@ gen/
 
 AndroidManifest.out.xml
 local.properties
+
+.DS_Stor

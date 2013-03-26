@@ -1,10 +1,25 @@
 package com.bandwidth.tv;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -66,54 +81,63 @@ public class FullscreenActivity extends Activity {
      */
     private SystemUiHider mSystemUiHider;
     
-    // setup webviews
-    private String[] urls = new String[] {
-            "https://docs.google.com/spreadsheet/pub?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&output=html&widget=true",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=41&zx=hbcdt9i24osj",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=40&zx=9bq11x79493o",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=39&zx=np3rpvhlhqgu",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=38&zx=at0y464yf29t",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=36&zx=mzyswxxe7sqy",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=35&zx=v23cg94bud17",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=34&zx=u6i322dbcfwr",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=33&zx=3nd0k1hcammw",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=32&zx=bkuubrfrynoo",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=43&zx=5eeq7z5b9jdn",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=31&zx=dxoxoubs1fkn",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=30&zx=hvkzhzswqkjj",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=29&zx=d45gmcokmr7u",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=28&zx=s2nnpn2hwh3t",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=27&zx=892ewag9w6gm",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=26&zx=5x9guk156aiu",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=25&zx=ixnqxuell0gq",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=24&zx=edq4kyh54qpy",
-            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=23&zx=mu45cfvpswkk",
-            "https://docs.google.com/presentation/d/148OFSD09nki_vTmRXCEZ1uclff1lfUMxsZ4urmibN4Y/pub?start=true&loop=true&delayms=15000"
-    };
+    private static final int RELOAD = 1000;
+    private static final int RELOAD_INTERVAL = 1800000;
+//    private final int RELOAD_INTERVAL = 60000;
     
-    private int[] intervals = new int[] {
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            15000,
-            90000
-    };
+    // setup webviews
+//    private String[] urls = new String[] {
+//            "https://docs.google.com/spreadsheet/pub?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&output=html&widget=true",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=41&zx=hbcdt9i24osj",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=40&zx=9bq11x79493o",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=39&zx=np3rpvhlhqgu",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=38&zx=at0y464yf29t",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=36&zx=mzyswxxe7sqy",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=35&zx=v23cg94bud17",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=34&zx=u6i322dbcfwr",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=33&zx=3nd0k1hcammw",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=32&zx=bkuubrfrynoo",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=43&zx=5eeq7z5b9jdn",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=31&zx=dxoxoubs1fkn",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=30&zx=hvkzhzswqkjj",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=29&zx=d45gmcokmr7u",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=28&zx=s2nnpn2hwh3t",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=27&zx=892ewag9w6gm",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=26&zx=5x9guk156aiu",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=25&zx=ixnqxuell0gq",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=24&zx=edq4kyh54qpy",
+//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=23&zx=mu45cfvpswkk",
+//            "https://docs.google.com/presentation/d/148OFSD09nki_vTmRXCEZ1uclff1lfUMxsZ4urmibN4Y/pub?start=true&loop=true&delayms=15000"
+//    };
+//    
+//    private int[] intervals = new int[] {
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            15000,
+//            90000
+//    };
+    
+    private ViewPagerFlipper mViewPager;
+    private List<Page> mPages;
+    private Button mBtnControl;
+    private Button mBtnConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,11 +152,11 @@ public class FullscreenActivity extends Activity {
         setContentView(R.layout.activity_fullscreen);
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final ViewPagerFlipper viewPager = (ViewPagerFlipper)findViewById(R.id.fullscreen_content);
+        mViewPager = (ViewPagerFlipper)findViewById(R.id.fullscreen_content);
 
         // Set up an instance of SystemUiHider to control the system UI for
         // this activity.
-        mSystemUiHider = SystemUiHider.getInstance(this, viewPager,
+        mSystemUiHider = SystemUiHider.getInstance(this, mViewPager,
                 HIDER_FLAGS);
         mSystemUiHider.setup();
         mSystemUiHider
@@ -176,7 +200,7 @@ public class FullscreenActivity extends Activity {
                 });
 
         // Set up the user interaction to manually show or hide the system UI.
-        viewPager.setOnClickListener(new View.OnClickListener() {
+        mViewPager.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (TOGGLE_ON_CLICK) {
@@ -190,32 +214,36 @@ public class FullscreenActivity extends Activity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        final Button btnControl = (Button)findViewById(R.id.btn_control);
-        btnControl.setOnTouchListener(
+        mBtnControl = (Button)findViewById(R.id.btn_control);
+        mBtnControl.setOnTouchListener(
                 mDelayHideTouchListener);
-        
-
-        
-        
-        viewPager.setOffscreenPageLimit(urls.length);
-        WebviewPagerAdapter mWebviewAdapater = new WebviewPagerAdapter(this, urls, intervals);
-        viewPager.setAdapter(mWebviewAdapater);
-        
-        btnControl.setOnClickListener(new OnClickListener() {
-
+        mBtnControl.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "toggleFlipping");
-                viewPager.toggleFlipping();
+                mViewPager.toggleFlipping();
                 
-                if (viewPager.isFlipping()) {
-                    btnControl.setText(R.string.lbl_stop);
+                if (mViewPager.isFlipping()) {
+                    mBtnControl.setText(R.string.lbl_stop);
                 } else {
-                    btnControl.setText(R.string.lbl_start);
+                    mBtnControl.setText(R.string.lbl_start);
                 }
             }
-            
         });
+        
+        mBtnConfig = (Button)findViewById(R.id.btn_config);
+        mBtnConfig.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewPager.stopFlipping();
+                new ConfigFetch().execute();
+            }
+        });
+        
+        WebviewPagerAdapter mWebviewAdapater = new WebviewPagerAdapter(this, null);
+        mViewPager.setAdapter(mWebviewAdapater);
+        
+        new ConfigFetch().execute();
     }
 
     @Override
@@ -232,7 +260,19 @@ public class FullscreenActivity extends Activity {
     public void onConfigurationChanged (Configuration newConfig) {
         
     }
-
+    
+    
+    protected void setPages(List<Page> pages) {
+        mPages = pages;
+        
+        mViewPager.setOffscreenPageLimit(pages.size());
+        WebviewPagerAdapter mWebviewAdapater = new WebviewPagerAdapter(this, pages);
+        mViewPager.setAdapter(mWebviewAdapater);
+        // start flipping
+        mViewPager.startFlipping();
+        mBtnControl.setText(R.string.lbl_stop);
+    }
+    
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
@@ -248,11 +288,24 @@ public class FullscreenActivity extends Activity {
         }
     };
 
-    Handler mHideHandler = new Handler();
     Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
             mSystemUiHider.hide();
+        }
+    };
+    
+    private static final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == RELOAD) {
+                if (null != msg.obj && msg.obj instanceof WebView) {
+                    WebView webView = (WebView)msg.obj;
+                    webView.reload();
+                    Message nextMsg = obtainMessage(RELOAD, webView);
+                    sendMessageDelayed(nextMsg, RELOAD_INTERVAL);
+                }
+            }
         }
     };
 
@@ -261,30 +314,33 @@ public class FullscreenActivity extends Activity {
      * previously scheduled calls.
      */
     private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
+        mHandler.removeCallbacks(mHideRunnable);
+        mHandler.postDelayed(mHideRunnable, delayMillis);
     }
     
     private class WebviewPagerAdapter extends PagerAdapter implements ViewPagerFlipper.Callback {
         
         private Context mContext;
-        private String[] mUrls;
-        private int[] mIntervals;
+        private List<Page> mPages;
         
-        public WebviewPagerAdapter(Context context, String[] urls, int[] intervals) {
+        public WebviewPagerAdapter(Context context, List<Page> pages) {
             mContext = context;
-            mUrls = urls;
-            mIntervals = intervals;
+            mPages = pages;
         }
 
         @Override
         public int getCount() {
-            return mUrls.length;
+            if (mPages == null) {
+                return 0;
+            }
+            return mPages.size();
         }
         
         @Override
         public Object instantiateItem(ViewGroup collection, int position) {
-            
+            if (mPages == null) {
+                return null;
+            }
             WebView webview = new WebView(mContext);
             webview.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
                     LayoutParams.MATCH_PARENT));
@@ -308,8 +364,17 @@ public class FullscreenActivity extends Activity {
                             "Oh no! " + description, Toast.LENGTH_SHORT).show();
                 }
             });
-
-            webview.loadUrl(mUrls[position]);
+            
+            Page page = mPages.get(position);
+            
+            if (Type.IMAGE.equals(page.display)) {
+                int height = getWindowManager().getDefaultDisplay().getHeight();
+                String data = "<html><head><title>Example</title><meta name=\"viewport\"\"content=\"height="+height+", initial-scale=1 \" /></head>";
+                data = data+"<body><center><img height=\""+(height-200)+"\" src=\""+mPages.get(position).url+"\" /></center></body></html>";
+                webview.loadData(data, "text/html", null);                
+            } else {
+                webview.loadUrl(mPages.get(position).url);
+            }
 
             collection.addView(webview);
             
@@ -354,27 +419,73 @@ public class FullscreenActivity extends Activity {
         @Override
         public int getFlipInterval(int position) {
             Log.d(TAG, "position -> " + position);
-            Log.d(TAG, "mIntervals.length -> " + mIntervals.length);
-            return mIntervals[position];
+            return mPages.get(position).interval;
         }
         
-        private final int RELOAD = 1000;
-        private final int RELOAD_INTERVAL = 1800000;
-//        private final int RELOAD_INTERVAL = 60000;
+    }
+    
+    private enum Type {
+        IMAGE, HTML;
         
-        private final Handler mHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if (msg.what == RELOAD) {
-                    if (null != msg.obj && msg.obj instanceof WebView) {
-                        WebView webView = (WebView)msg.obj;
-                        webView.reload();
-                        Message nextMsg = obtainMessage(RELOAD, webView);
-                        sendMessageDelayed(nextMsg, RELOAD_INTERVAL);
-                    }
-                }
+        public static Type getType(String type) {
+            if (type.equals("image")) {
+                return IMAGE;
             }
-        };
+            
+            return HTML;
+        }
+    }
+    
+    private class Page {
+        public String title;
+        public String url;
+        public int interval;
+        public Type display;
+    }
+    
+    private class ConfigFetch extends AsyncTask<Void, Void, List<Page>> {
+
+        @Override
+        protected List<Page> doInBackground(Void... params) {
+            List<Page> pages = new ArrayList<Page>();
+            
+            HttpClient client = new DefaultHttpClient();
+            HttpContext ctx = new BasicHttpContext();
+            HttpGet get = new HttpGet("https://docs.google.com/spreadsheet/pub?key=0AnvKfvUoHlQkdFc4UURjMUh5ZUtpUURURmctMWJOWGc&single=true&gid=0&output=csv");
+            
+            try {
+                HttpResponse res = client.execute(get, ctx);
+                
+                BufferedReader reader = new BufferedReader(new InputStreamReader(res.getEntity().getContent()));
+                
+                boolean skip = true;
+
+                String line;
+                while ( (line = reader.readLine()) != null) {
+                    if (!skip) {
+                        String[] row = line.split(",");
+                        Page page = new Page();
+                        page.title = row[0];
+                        page.url = row[3];
+                        page.interval = Integer.parseInt(row[1]) * 1000;
+                        page.display = Type.getType(row[2]);
+                        pages.add(page);
+                    }
+                    skip = false;
+                }
+            } catch (ClientProtocolException e) {
+                Log.d(TAG, "could not get config", e);
+            } catch (IOException e) {
+                Log.d(TAG, "could not get config", e);
+            }
+            
+            return pages;
+        }
+        
+        @Override
+        protected void onPostExecute(List<Page> results) {
+            setPages(results);
+        }
         
     }
 }

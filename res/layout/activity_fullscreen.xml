@@ -11,7 +11,7 @@
         android:id="@+id/fullscreen_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:autoStart="true" />
+        app:autoStart="false" />
     
     <FrameLayout
         android:layout_width="match_parent"
@@ -25,6 +25,7 @@
             android:layout_gravity="bottom|center_horizontal"
             android:background="@color/black_overlay"
             android:orientation="horizontal"
+            android:weightSum="2"
             tools:ignore="UselessParent" >
             <Button
                 android:id="@+id/btn_control"
@@ -33,6 +34,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/lbl_stop" />
+            <Button
+                android:id="@+id/btn_config"
+                style="?buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/lbl_config" />
         </LinearLayout>
     </FrameLayout>
 </FrameLayout>
