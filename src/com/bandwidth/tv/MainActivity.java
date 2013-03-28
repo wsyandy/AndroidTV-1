@@ -17,6 +17,8 @@ import org.apache.http.protocol.HttpContext;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.os.AsyncTask;
@@ -25,6 +27,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -50,9 +53,9 @@ import com.bandwidth.tv.util.SystemUiHider;
  * 
  * @see SystemUiHider
  */
-public class FullscreenActivity extends Activity {
+public class MainActivity extends Activity {
     
-    private static final String TAG = FullscreenActivity.class.getSimpleName();
+    private static final String TAG = MainActivity.class.getSimpleName();
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -83,59 +86,9 @@ public class FullscreenActivity extends Activity {
     
     private static final int RELOAD = 1000;
     private static final int RELOAD_INTERVAL = 1800000;
-//    private final int RELOAD_INTERVAL = 60000;
-    
-    // setup webviews
-//    private String[] urls = new String[] {
-//            "https://docs.google.com/spreadsheet/pub?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&output=html&widget=true",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=41&zx=hbcdt9i24osj",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=40&zx=9bq11x79493o",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=39&zx=np3rpvhlhqgu",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=38&zx=at0y464yf29t",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=36&zx=mzyswxxe7sqy",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=35&zx=v23cg94bud17",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=34&zx=u6i322dbcfwr",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=33&zx=3nd0k1hcammw",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=32&zx=bkuubrfrynoo",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=43&zx=5eeq7z5b9jdn",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=31&zx=dxoxoubs1fkn",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=30&zx=hvkzhzswqkjj",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=29&zx=d45gmcokmr7u",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=28&zx=s2nnpn2hwh3t",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=27&zx=892ewag9w6gm",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=26&zx=5x9guk156aiu",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=25&zx=ixnqxuell0gq",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=24&zx=edq4kyh54qpy",
-//            "https://docs.google.com/a/bandwidth.com/spreadsheet/oimg?key=0AuZLWgNYY1vYdENOUWt5dlV6SmFkd2VaLVNxdlhiUHc&oid=23&zx=mu45cfvpswkk",
-//            "https://docs.google.com/presentation/d/148OFSD09nki_vTmRXCEZ1uclff1lfUMxsZ4urmibN4Y/pub?start=true&loop=true&delayms=15000"
-//    };
-//    
-//    private int[] intervals = new int[] {
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            15000,
-//            90000
-//    };
+    private static final int CONFIG = 101;
     
     private ViewPagerFlipper mViewPager;
-    private List<Page> mPages;
     private Button mBtnControl;
     private Button mBtnConfig;
 
@@ -236,14 +189,19 @@ public class FullscreenActivity extends Activity {
             @Override
             public void onClick(View v) {
                 mViewPager.stopFlipping();
-                new ConfigFetch().execute();
+//                new ConfigFetch().execute();
+                startActivityForResult(new Intent(MainActivity.this, SettingsActivity.class), CONFIG);
             }
         });
         
         WebviewPagerAdapter mWebviewAdapater = new WebviewPagerAdapter(this, null);
         mViewPager.setAdapter(mWebviewAdapater);
         
-        new ConfigFetch().execute();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String sheetId = prefs.getString("sheet_id", null);
+        if (sheetId != null) {
+            new ConfigFetch().execute();
+        }
     }
 
     @Override
@@ -261,10 +219,20 @@ public class FullscreenActivity extends Activity {
         
     }
     
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        switch(requestCode) {
+        case CONFIG:
+            if (resultCode == RESULT_OK) {
+                new ConfigFetch().execute();
+            }
+        }
+    }
+    
     
     protected void setPages(List<Page> pages) {
-        mPages = pages;
-        
         mViewPager.setOffscreenPageLimit(pages.size());
         WebviewPagerAdapter mWebviewAdapater = new WebviewPagerAdapter(this, pages);
         mViewPager.setAdapter(mWebviewAdapater);
@@ -349,18 +317,20 @@ public class FullscreenActivity extends Activity {
             webview.getSettings().setBuiltInZoomControls(true);
             webview.getSettings().setUseWideViewPort(true);
             webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+            webview.getSettings().setAppCacheEnabled(false);
+            webview.getSettings().setAppCacheMaxSize(0);
             webview.setWebChromeClient(new WebChromeClient() {
                 @Override
                 public void onProgressChanged(WebView view, int progress) {
                     Log.d(TAG, "progress -> " + progress + "; url -> " + view.getUrl());
-                    FullscreenActivity.this.setProgress(progress * 1000);
+                    MainActivity.this.setProgress(progress * 1000);
                 }
             });
             webview.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onReceivedError(WebView view, int errorCode,
                         String description, String failingUrl) {
-                    Toast.makeText(FullscreenActivity.this,
+                    Toast.makeText(MainActivity.this,
                             "Oh no! " + description, Toast.LENGTH_SHORT).show();
                 }
             });
@@ -370,10 +340,11 @@ public class FullscreenActivity extends Activity {
             if (Type.IMAGE.equals(page.display)) {
                 int height = getWindowManager().getDefaultDisplay().getHeight();
                 String data = "<html><head><title>Example</title><meta name=\"viewport\"\"content=\"height="+height+", initial-scale=1 \" /></head>";
-                data = data+"<body><center><img height=\""+(height-200)+"\" src=\""+mPages.get(position).url+"\" /></center></body></html>";
+                data = data+"<body><center><img height=\""+(height-200)+"\" src=\""+mPages.get(position).url+"&"+System.currentTimeMillis()+"\" /></center></body></html>";
                 webview.loadData(data, "text/html", null);                
             } else {
-                webview.loadUrl(mPages.get(position).url);
+                
+                webview.loadUrl(mPages.get(position).url+"&"+System.currentTimeMillis());
             }
 
             collection.addView(webview);
@@ -447,11 +418,19 @@ public class FullscreenActivity extends Activity {
 
         @Override
         protected List<Page> doInBackground(Void... params) {
+            
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+            String sheetId = prefs.getString("sheet_id", null);
+            
+            if (sheetId == null) {
+                return null;
+            }
+            
             List<Page> pages = new ArrayList<Page>();
             
             HttpClient client = new DefaultHttpClient();
             HttpContext ctx = new BasicHttpContext();
-            HttpGet get = new HttpGet("https://docs.google.com/spreadsheet/pub?key=0AnvKfvUoHlQkdFc4UURjMUh5ZUtpUURURmctMWJOWGc&single=true&gid=0&output=csv");
+            HttpGet get = new HttpGet("https://docs.google.com/spreadsheet/pub?key=0AnvKfvUoHlQkdFc4UURjMUh5ZUtpUURURmctMWJOWGc&single=true&gid=" + sheetId + "&output=csv");
             
             try {
                 HttpResponse res = client.execute(get, ctx);
@@ -484,7 +463,9 @@ public class FullscreenActivity extends Activity {
         
         @Override
         protected void onPostExecute(List<Page> results) {
-            setPages(results);
+            if (results != null && results.size() > 0) {
+                setPages(results);
+            }
         }
         
     }
